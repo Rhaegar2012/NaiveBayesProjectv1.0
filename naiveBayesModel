@@ -1,0 +1,518 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jun 15 17:52:58 2020
+
+@author: joseb
+"""
+import matplotlib.pyplot as plt 
+import numpy as np
+
+"""
+Naive Bayes model 
+
+Input: 
+CSV training file extracted from the Colombian police record 
+Training instances to be used 
+Target instance to be predicted 
+Queried instances (municipality, gender), can be taken from test set
+
+Output
+
+Top 10 probability results from query instances , highligthing in which 
+municipalities are crimes more likely and which crimes are most commonly committed
+"""
+import csv 
+
+trainingSet=open('CrimeTrainingSet.csv')
+testSet=open('CrimeTestSet.csv')
+dataTags=['Municipio','Genero','Delito']
+crimeTags=["RAPE","MURDER","MUGGING"]
+targetFeature='Delito'
+
+"""
+Function csvtodict
+
+Converts a csv file into a dictionary data structure
+input
+csv file
+trainingTags: tags that are going to be used for the training data keys in 
+the dictionary 
+
+output
+Dictionary data structure with CSV file 
+"""
+def csvtodict(csv_file,dataTags,targetFeature):
+    dataReader=csv.reader(csv_file)
+    newDict={}
+  
+    #Number of columns of the dataset, the last column is always the target
+    #feature
+    numCol=len(dataTags)
+    #Creates empty lists for the dictionary instances
+    for i in range(numCol):
+        newDict[dataTags[i]]=[]
+    #Fills the dictionary with each instance from the CSV
+    for line in dataReader:
+        if len (line)<len(dataTags):
+            line=[]
+        for i in range(numCol):
+            if line:
+                newDict[dataTags[i]].append(line[i])
+    return newDict
+          
+"""
+Sort Dictionary 
+"""
+"""
+Selection sort algorithm to organize the dictionary entries from smallest to largest
+
+Input: Unsorted list containing tuple entries
+Output: Sorted list containing tuple entries 
+"""
+def sortDictionary(dataSet):
+    for i in range(len(dataSet)-1,0,-1):
+        pos_of_max=0
+        for location in dataSet:
+            if location[1]>dataSet[pos_of_max][1]:
+                pos_of_max=dataSet.index(location)
+            temp=dataSet[i]
+            dataSet[i]=dataSet[pos_of_max]
+            dataSet[pos_of_max]=temp
+    return dataSet
+
+"""
+QuickSort Algorithm
+
+"""
+"""
+Quicksort is uded as an alternative to Selection sort , due to Selection being too
+slow for large datasets
+
+Input: Unsorted list containing tuple entries
+Output: Sorted list containing tuple entries
+Calls: quickSortHelper , recursive function
+
+
+"""
+
+def quickSort(dataset):
+    quickSortHelper(dataset,0,len(dataset)-1)
+def quickSortHelper(dataset,first,last):
+    if first<last:
+        split_point=partition(dataset,first,last)
+        quickSortHelper(dataset,first,split_point-1)
+        quickSortHelper(dataset,split_point+1,last)
+def partition(dataset,first,last):
+    pivot_value=dataset[first][1]
+    left_mark=first+1
+    right_mark=last
+    done=False
+    while not done:
+        while left_mark<=right_mark and  dataset[left_mark][1]<=pivot_value:
+            left_mark=left_mark+1
+        while dataset[right_mark][1]>= pivot_value and right_mark >=left_mark:
+            right_mark=right_mark-1
+        if right_mark<left_mark:
+            done=True
+        else:
+            temp=dataset[left_mark]
+            dataset[left_mark]=dataset[right_mark]
+            dataset[right_mark]=temp
+    temp=dataset[first]
+    dataset[first]=dataset[right_mark]
+    dataset[right_mark]=temp
+    
+    return right_mark
+"""
+Front and Back Search Algorithm
+
+Given the large size of the arrays we have , I decided to implement a 
+searching algorithm that looks for elements in the array in O(n) complexity 
+I chose front and back as it is half the time it takes for linear search 
+
+Input: Array, searchtarget
+Output: true or false depending on wheter the searchtarget was found or not
+
+"""
+
+def frontAndBackSearch(array,searchtarget):
+    front=0
+    back=len(array)-1
+    while front<=back:
+        if array[front]==searchtarget or array[back]==searchtarget:
+            return True 
+        front+=1
+        back-=1
+    return False
+"""
+cityCrimeFreq
+
+Dictionary function to classify crime frequencies in key value pairs
+
+Input:
+Dataset
+key-position: position of the dictionary key within the dataSet
+value-Position: position of the target and or prediction instance within the dataset
+Output:
+
+freq dictionary the dictionary with the frequencies per selected key 
+"""
+def cityCrimeFreq(dataset,keyPosition,valuePosition):
+    freqDict={}
+    for i in dataset:
+        key=i[keyPosition]
+        value=i[valuePosition]
+        if key not in freqDict:
+            freqDict[key]={}
+            if value not in freqDict[key]:
+                freqDict[key][value]=1
+            else:
+                freqDict[key][value]+=1
+        else:
+             if value not in freqDict[key]:
+                freqDict[key][value]=1
+             else:
+                freqDict[key][value]+=1
+    return freqDict
+'''
+Naive Bayes Implementation Algorithm
+'''
+
+"""
+Objects
+"""
+"""
+Conditional probability 
+The object conditional probability will store all the information relative to a given conditional probability 
+
+Variables:
+X frequency of event X
+Y frequency of event Y
+X_tag: tag for event X
+Y_tag: tag for event Y 
+Designator: Designator of the probability in the form (X=x│Y=y)
+P: probability of the event P((X│Y))
+
+Methods 
+getters() and setters() for all variables 
+calculateProbability()based on the frequencies for X and Y returns the P 
+
+"""
+class condProb():
+    def __init__(self,X=None,Y=None,X_tag=None,Y_tag=None,Designator=None,P=None):
+        self.X=X
+        self.Y=Y
+        self.X_tag=X_tag
+        self.Y_tag=Y_tag
+        self.Designator=Designator
+        self.P=P
+    def calculateProbability(self):
+        self.P=self.X/self.Y
+        return self.P
+    def createDesignator(self,priorTag,priorValue,conditionTag,conditionValue):
+        self.Designator="("+priorTag+"="+priorValue+"│"+conditionTag+"="+conditionValue+")"
+        return self.Designator
+    def setX(self,X):
+        self.X=X
+    def setY(self,Y):
+        self.Y=Y
+    def setXtag(self,X_tag):
+        self.X_tag=X_tag
+    def setYtag(self,Y_tag):
+        self.Y_tag=Y_tag
+    
+"""
+City 
+
+The object city is used to store crime data values for the prediction and test sets, it can be used 
+for visualization purposes
+
+Variables:
+Name:String, City Name taken from dataset 
+Target Frequencies: Dictionary, stores the frequencies for each crime in a given city recorded in the target dataset
+Prediction Frequencies: Dictionary, stores the frequencies for each crime in a given city recorded in the prediction dataset
+
+Methods 
+Getters () and setters () for all variables 
+targetDictCategory(category) creates a new key for the target_frequencies dictionary
+predictionDictCategory(category) creates a new key for the prediction frequencies dictionary 
+record_target(key) stores a target dataset frequency instance
+record_prediction(key) stores a prediction dataset frequency instance
+
+
+
+"""
+class City():
+    def __init__(self,name=None,target_frequencies={},prediction_frequencies={}):
+        self.name=name
+        self.target_frequencies=target_frequencies
+        self.prediction_frequencies=prediction_frequencies
+    def targetDictCategory(self,key):
+        self.target_frequencies[key]=1
+    def predictionDictCategory(self,key):
+        self.prediction_frequencies[key]=1
+    def record_target(self,key):
+        self.target_frequencies[key]+=1
+    def record_prediciton(self,key):
+        self.prediction_frequencies[key]+=1
+    def getTargetDict(self):
+        return self.target_frequencies
+    def getPredictionDict(self):
+        return self.prediction_frequencies
+    
+        
+        
+"""
+targetProbabilities 
+
+Function: Calculates the probabilities for the target features
+
+Input : dataSet,target. The target input variable is the target feature tag to identify in the dataset
+Output: Dictionary for target feature probability distribution
+"""
+
+def targetProbabilities(dataset,target):
+    targetLevels=dataset[target]
+    categories=[]
+    frequencies={}
+    prob_distribution={}
+    for i in targetLevels:
+        if i not in categories:
+            categories.append(i)
+            frequencies[i]=1
+            prob_distribution[i]=0
+        else:
+            frequencies[i]+=1
+    for i in frequencies:
+        probability=frequencies[i]/len(targetLevels)
+        prob_distribution[i]=probability
+    return prob_distribution
+    
+
+"""
+conditional probabilities
+
+Function: calculates the conditional probability distribution for each of the 
+descriptive feature in relation to the target feature
+I think an object "conditional probability" may be necessary to store all the information
+needed to describe the probability 
+Input: dataSet,target being the key that identifies the target feature from the dataset
+and target_distribution , which corresponds to the probability distribution of the
+target feature 
+Output: conditional proability distribution (maybe I´ll use a dictionary)
+
+"""
+
+def conditionalProbabilities(dataset,target,trainingTags):
+    targetData=dataset[target]
+    conditionalProbability={}
+    count =0
+    while count<len(dataset)-1:
+    
+        trainingData=dataset[trainingTags[count]]
+        #Obtain categories for the training and target datasets
+        trainingFrequencies={}
+        targetFrequencies={}
+    
+        for i in range(len(targetData)):
+            if targetData[i] not in targetFrequencies:
+                targetFrequencies[targetData[i]]=1
+            else:
+                targetFrequencies[targetData[i]]+=1
+            cond=(trainingData[i],targetData[i])
+            if cond not in trainingFrequencies:
+                trainingFrequencies[cond]=1
+            else:
+                trainingFrequencies[cond]+=1
+           
+    #With the frequencies we create the probability list
+  
+        for i in trainingFrequencies:
+            newProb=condProb()
+            newProb.setX(trainingFrequencies[i])
+            newProb.setY(targetFrequencies[i[1]])
+            newProb.setXtag(i[0])
+            newProb.setYtag(i[1])
+            newProb.createDesignator(trainingTags[count],newProb.X_tag,target,newProb.Y_tag)
+            newProb.calculateProbability()
+            conditionalProbability[newProb.Designator]=newProb
+        count+=1
+
+    return conditionalProbability 
+
+            
+    
+
+"""
+Naive Bayes
+
+Function: The Naive Bayes Algorithm 
+
+Input:  Training Set, Test (query) set ,training tags , target feature
+Callout functions :conditionalProbabilities, targetProbabilities 
+Output: Prediction distribution 
+a) calculate the probability distribution for the target feature  (targetProbabilities)
+b) calculate the conditional probabilities for the training set   (conditionalProbabilities)
+c) Read the query from the test set 
+d) look for the relevant probabilities from the probability distribution 
+e) apply the Naive bayes model for each level of the target feature and store its results 
+    
+
+
+"""
+def naiveBayes(trainingData,testData,target,trainingTags):
+    trainingSet=csvtodict(trainingData,trainingTags,target)
+    testSet=csvtodict(testData,trainingTags,target)
+    targetDistribution=targetProbabilities(trainingSet,target)
+    condProbabilities=conditionalProbabilities(trainingSet,target,trainingTags)
+    count=0
+    querylist=[]
+    #Construct the query list from the test dictionary data set, we avoid repeating entries
+    #so the resulting set is smaller and easier to handle, this takes a long time even 
+    #using the front and back seach algorithm
+    while count< (len(testSet[target])):
+        line=[]
+        for i in testSet:
+            line.append(testSet[i][count])
+        if not frontAndBackSearch(querylist,line):
+            querylist.append(line) 
+        count+=1
+    #now we apply the naive bayes model for each query and we store the value in a separate dictionary 
+    #NaiveProbabilities
+    #This result dictionary is what we will use to make predictions about crime probabilities in 
+    #Different municipalities and genders 
+    #We will have a prediction for each query not a probability
+    #ToDO Review the application of the model , we should give a prediction for a target level not a 
+    #Probability
+    targetPrediction={}
+    for i in targetDistribution:
+        targetPrediction[i]=1
+
+    for i in querylist:
+        prediction=1
+        for j in targetPrediction:
+            for k in range(len(i)-1):
+                probDesignator="("+trainingTags[k]+"="+i[k]+"│"+target+"="+j+")"
+                if probDesignator in condProbabilities:
+                    eventProb=condProbabilities[probDesignator].P
+                prediction=prediction*eventProb
+            targetPrediction[j]=prediction*targetDistribution[j]
+            prediction=1
+        pred=max(targetPrediction,key=targetPrediction.get)
+        i.append(pred)
+
+    return querylist
+        
+
+
+
+"""
+Model Execution
+"""
+
+naivePrediction=naiveBayes(trainingSet,testSet,targetFeature,dataTags)
+"""
+Model Evaluation 
+"""
+"""
+Classification rate
+"""
+num_correct_predictions=0
+num_incorrect_predictions=0
+target_total_values={}
+prediction_total_values={}
+for i in crimeTags:
+    target_total_values[i]=0
+    prediction_total_values[i]=0
+#Cycle for filtering the data in several significant ways for visualization purposes
+for i in naivePrediction:
+    targetValue=i[len(i)-2]
+    predictionValue=i[len(i)-1]
+    target_total_values[targetValue]+=1
+    prediction_total_values[predictionValue]+=1
+    #Calculates missclasification rate and classification accuracy
+    if targetValue==predictionValue:
+        num_correct_predictions+=1
+    else:
+        num_incorrect_predictions+=1
+
+
+        
+
+miss_rate=num_correct_predictions/len(naivePrediction)
+class_rate=1-miss_rate
+target_freq=cityCrimeFreq(naivePrediction,0,len(naivePrediction[0])-2)
+pred_freq=cityCrimeFreq(naivePrediction,0,len(naivePrediction[0])-1)
+
+
+print("Missclassification Rate: "+str(miss_rate*100)+"%")
+print("Classification Accuracy: "+str(class_rate*100)+"%")
+print("Target frequency values")
+print(target_total_values)
+print("Prediction frequency values")
+print(prediction_total_values)
+
+"""
+Top most dangereous Municipalities
+"""
+"""
+Function 
+
+topTen
+
+Scans a dictionary looking for the 10 highest value key value pairs
+
+Input: Dictionary, the values in the dictionary are defined as dictionary themseleves
+so the program needs to scan key value pairs within value pairs 
+
+keyTags is a list  for the keys the dictionary is going to have , in this particular case
+the keys are the crime tags
+
+Output: Dictionary showing the highest criminality cities per crime
+
+
+"""
+
+def topTen(dictionary,keyTags):
+    sortedDict={}
+    for i in keyTags:
+        sortedDict[i]=[]
+ 
+    for i in sortedDict:
+        count=0
+        while count<5:
+            max_value=0
+            city=""
+            for j in dictionary:
+                if i in dictionary[j]:
+                    value=dictionary[j][i]
+                    if city not in sortedDict[i]:
+                        if value>=max_value:
+                            max_value=value
+                            city=j
+                            dictionary[j][i]=0
+
+            sortedDict[i].append(city)
+            count+=1
+    return sortedDict
+
+topTenTarget=topTen(target_freq,crimeTags)
+topTenPrediction=topTen(pred_freq,crimeTags)
+print("Top 5 cities for target")
+print(topTenTarget)
+print("Top 5 cities for Prediction")
+print(topTenPrediction)
+
+"""
+Plots
+"""
+
+X=np.arange(len(target_total_values))
+ax=plt.subplot(111)
+ax.bar(X,target_total_values.values(),width=0.2,color='b',align='center')
+ax.bar(X-0.2,prediction_total_values.values(),width=0.2,color='g',align='center')
+ax.legend(('Target','Prediction'))
+plt.xticks(X,target_total_values.keys())
+plt.title("Predicted Values",fontsize=17)
+plt.show()
+
