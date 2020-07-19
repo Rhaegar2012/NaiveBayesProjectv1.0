@@ -1,0 +1,121 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun May 31 14:16:01 2020
+
+@author: joseb
+"""
+
+import csv
+import random 
+
+"""
+Data Cleaning for Crime History Data
+"""
+
+' Open Colombian Police Data Files '
+sex_data_2010=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2010.csv")
+sex_data_2011=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2011.csv")
+sex_data_2012=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2012.csv")
+sex_data_2013=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2013_0.csv")
+sex_data_2014=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2014_0.csv")
+sex_data_2015=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2015_0.csv")
+sex_data_2016=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2016.csv")
+sex_data_2017=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2017_0.csv")
+sex_data_2018=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2018.csv")
+sex_data_2019=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Delitos Sexuales\delitos-sexuales-2019_0.csv")
+murder_data_2010=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2010.csv")
+murder_data_2011=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2011.csv")
+murder_data_2012=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2012.csv")
+murder_data_2013=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2013.csv")
+murder_data_2014=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2014.csv")
+murder_data_2015=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2015.csv")
+murder_data_2016=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2016.csv")
+murder_data_2017=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2017_0.csv")
+murder_data_2018_0=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2018_0.csv")
+murder_data_2018_1=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2018_1.csv")
+murder_data_2019=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Homicidios\homicidios-2019_0.csv")
+mug_data_2010=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2010.csv")
+mug_data_2011=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2011.csv")
+mug_data_2012=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2012.csv")
+mug_data_2013=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2013.csv")
+mug_data_2014=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2014.csv")
+mug_data_2015=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2015.csv")
+mug_data_2016=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2016.csv")
+mug_data_2017=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2017_parte_1.csv")
+mug_data_2018_0=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2018_0.csv")
+mug_data_2018_1=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2018_primera_parte.csv")
+mug_data_2018_2=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2018_segunda_parte.csv")
+mug_data_2019_0=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2019_primera_parte.csv")
+mug_data_2019_1=open(r"C:\Users\joseb\Desktop\Documents\Special Projects\Pax Aurora\Analytics\Projects\2.0-Crime Predictor\Data\Hurto Personas\hurto-personas-2019_segunda_parte.csv")
+sex_datasets=[sex_data_2010,sex_data_2011,sex_data_2012,sex_data_2013,sex_data_2014,sex_data_2015,sex_data_2016,sex_data_2017,sex_data_2018,sex_data_2019]
+murder_datasets=[murder_data_2010,murder_data_2011,murder_data_2012,murder_data_2013,murder_data_2014,murder_data_2015,murder_data_2016,murder_data_2017,murder_data_2018_0,murder_data_2018_1,murder_data_2019]
+mugging_datasets=[mug_data_2010,mug_data_2011,mug_data_2012,mug_data_2013,mug_data_2014,mug_data_2015,mug_data_2016,mug_data_2017,mug_data_2018_0,mug_data_2018_1,mug_data_2018_2,mug_data_2019_0,mug_data_2019_1]
+SexualCrimeData=open('SexualCrimeData.csv','w',newline='')
+HomicideCrimeData=open("HomicideCrimeData.csv","w",newline='')
+MuggingCrimeData=open("MuggingCrimeData.csv","w",newline='')
+outputWriter=csv.writer(SexualCrimeData)
+outputWriter_1=csv.writer(HomicideCrimeData)
+outputWriter_2=csv.writer(MuggingCrimeData)
+"Extract and store relevant features for each dataset"
+GENERO=["MASCULINO","FEMENINO"]
+error_municipio=["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20"]
+sex_instances=0
+murder_instances=0
+mugging_instances=0
+for i in sex_datasets:
+    testData=csv.reader(i)
+    for line in testData:
+        if line[13] not in GENERO:
+            line[13]="NO REPORTA"
+        if line[2] in error_municipio or line[2]=="":
+            line[2]="NO REPORTA"
+        outputWriter.writerow([line[2],line[13],"RAPE"])
+        sex_instances+=1
+for i in murder_datasets:
+    testData=csv.reader(i)
+    for line in testData:
+         if line[12] not in GENERO:
+            line[12]="NO REPORTA"
+         if line[2] in error_municipio or line[2]=="":
+            line[2]="NO REPORTA"
+         outputWriter_1.writerow([line[2],line[12],"MURDER"])
+         murder_instances+=1
+for i in mugging_datasets:
+    testData=csv.reader(i)
+    for line in testData:
+        if line[12] not in GENERO:
+            line[12]="NO REPORTA"
+        if line[2] in error_municipio or line[2]=="":
+            line[2]="NO REPORTA"
+        outputWriter_2.writerow([line[2],line[12],"MUGGING"])
+        mugging_instances+=1
+total_instances=sex_instances+murder_instances+mugging_instances
+print("Rape Instances: ", sex_instances)
+print("Murder Instances: ", murder_instances)
+print("Robbery Instances: ", mugging_instances)
+print("Total Instances: ", total_instances)
+SexualCrimeData.close()
+HomicideCrimeData.close()
+MuggingCrimeData.close()
+
+compiledCrimeDataSets=['SexualCrimeData.csv','HomicideCrimeData.csv','MuggingCrimeData.csv']
+"""Combine datasets and separate into training and testing datasets
+
+The  function extracts 30% of random instances from the dataset as the test set, the remaining is the training dataset
+"""
+trainingSet= open('CrimeTrainingSet.csv','w',newline='')
+trainingWriter=csv.writer(trainingSet)
+testSet=open('CrimeTestSet.csv','w',newline='')
+testWriter=csv.writer(testSet)
+for i in compiledCrimeDataSets:
+    f=open(i)
+    data=csv.reader(f)
+    for line in data:
+        decider= random.randint(0,10)
+        if decider>=3:
+            trainingWriter.writerow(line)
+        else:
+            testWriter.writerow(line)
+
+            
+
